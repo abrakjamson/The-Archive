@@ -22,7 +22,7 @@ from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHan
 from langchain_core.prompts import PromptTemplate
 
 import logging
-from database import Database
+from abstract_database import Abstract_Database
 
 class Langauge_Model():
 
@@ -31,12 +31,13 @@ class Langauge_Model():
         self._database = database
         callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
         self.llm = LlamaCpp(
-            model_path="C:/Users/abram/.cache/lm-studio/models/microsoft/Phi-3-mini-4k-instruct-gguf/Phi-3-mini-4k-instruct-q4.gguf",
+            model_path=model_name,
             temperature=0.75,
-            max_tokens=2000,
+            max_tokens=400,
             top_p=1,
             callback_manager=callback_manager,
-            verbose=True,  # Verbose is required to pass to the callback manager
+            verbose=True,
+            n_ctx=64000
         )
 
     def process_query(self, query):
@@ -46,17 +47,18 @@ class Langauge_Model():
         query: A string of the user's prompt
         
         returns a string of the LLM's response"""
-        self._database.search_by_keyword(query)
+        search_result = self._database.search(query)
 
         template = """<|system|>\n
         Directly answer the user's question without any extra information.
-        Be as concise as possible.<|end|>\n
+        Be as concise as possible. The following is context information for the user's question\n\n
+        {context}
+        <|end|>\n
         <|user|>\n{user_question}<|end|>\n
         <|assistant|>\n"""
         prompt_template = PromptTemplate.from_template(template)
-        constructed_prompt = prompt_template.format(user_question=query)
+        constructed_prompt = prompt_template.format(user_question=query,context=search_result)
         
         self.llm.invoke(constructed_prompt)
 
-        return ("User query was: \n" + query)
-    
+        return f"User query was: \n {query}"

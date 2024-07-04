@@ -3,7 +3,8 @@ Copywright Abram Jackson 2024
 All rights reserved
  """
 
-from database import Database
+from abstract_database import Abstract_Database
+from online_wikipedia import Online_Wikipedia
 from language_model import Langauge_Model
 
 import logging
@@ -30,7 +31,7 @@ def execution_loop():
 
 print("Please wait for the model and database to load...")
 # Instantiate
-loaded_database = Database()
-model = Langauge_Model(loaded_database, model_name="Phi-3-mini-4k-instruct-q4.gguf")
+loaded_database = Online_Wikipedia()
+model = Langauge_Model(loaded_database, model_name=r"C:\Users\abram\.cache\lm-studio\models\rubra-ai\Phi-3-mini-128k-instruct-GGUF\rubra-phi-3-mini-128k-instruct.Q4_K_M.gguf")
 print("Ready")
 execution_loop()
