@@ -18,17 +18,17 @@ from langchain.schema import StrOutputParser
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain.schema.runnable import RunnablePassthrough
 from langchain_community.llms import LlamaCpp
+from langchain_community.retrievers import WikipediaRetriever
 from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
 import logging
-from abstract_database import Abstract_Database
 
 class Langauge_Model():
 
-    def __init__(self, database, model_name="test", ):
+    def __init__(self, model_name="test", ):
         logging.info("LLM init with model: " + model_name)
-        self._database = database
         callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
         self.llm = LlamaCpp(
             model_path=model_name,
@@ -37,7 +37,8 @@ class Langauge_Model():
             top_p=1,
             callback_manager=callback_manager,
             verbose=True,
-            n_ctx=64000
+            n_ctx=8192,
+            n_gpu_layers=100
         )
 
     def process_query(self, query):
@@ -47,7 +48,6 @@ class Langauge_Model():
         query: A string of the user's prompt
         
         returns a string of the LLM's response"""
-        search_result = self._database.search(query)
 
         template = """<|system|>\n
         Directly answer the user's question without any extra information.
@@ -57,8 +57,12 @@ class Langauge_Model():
         <|user|>\n{user_question}<|end|>\n
         <|assistant|>\n"""
         prompt_template = PromptTemplate.from_template(template)
-        constructed_prompt = prompt_template.format(user_question=query,context=search_result)
-        
-        self.llm.invoke(constructed_prompt)
+        retriever = WikipediaRetriever(lang="en", doc_content_chars_max=10000, top_k_results=2)
+        setup_and_retrieval = RunnableParallel(
+            {"context": retriever, "user_question": RunnablePassthrough()}
+        )
+        output_parser = StrOutputParser()
+        chain = setup_and_retrieval | prompt_template | self.llm  | output_parser
+        test = chain.invoke(query)
 
-        return f"User query was: \n {query}"
+        return f"response again was: \n {test}"

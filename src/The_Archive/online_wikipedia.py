@@ -30,7 +30,7 @@ class Online_Wikipedia(Abstract_Database):
             'list': 'search',
             'srsearch': query,
             'format': 'json',
-            'srlimit': 1  # Limit the search results to the top 3 articles
+            'srlimit': 1  # Limit the search results to the top 1 article
         }
         response = requests.get(base_url, params=params)
         if response.status_code == 200:
@@ -45,15 +45,21 @@ class Online_Wikipedia(Abstract_Database):
         """Gets the contents of a wikipedia article by title and converts it to markdown"""
         base_url = 'https://en.wikipedia.org/w/api.php'
         params = {
-            'action': 'parse',
-            'page': page_title,
+            'action': 'query',
+            'titles': page_title,
             'format': 'json',
-#            'prop': 'text'
+            'prop': 'extracts',
+            'explaintext': 1,
+            'formatversion': 2
         }
+        
         response = requests.get(base_url, params=params)
         if response.status_code == 200:
             # get the HTML into a mostly-text format, while keeping breaks and lists
-            html_content = response.json().get('parse', {}).get('text', {}).get('*', '')
+ #           html_content = response.json().get('pages', {}).get('text', {}).get('*', '')
+            extract_content = response.json()['query']['pages'][0]['extract']
+            return extract_content[:8192]
+            """
             soup = BeautifulSoup(html_content, 'html.parser')
             text = ''
             for e in soup.descendants:
@@ -64,5 +70,6 @@ class Online_Wikipedia(Abstract_Database):
                 elif e.name == 'li':
                     text += '\n- '
             return text
+            """
         else:
             return f"An error occurred: {response.status_code}"
