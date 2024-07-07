@@ -3,7 +3,6 @@ Copywright Abram Jackson 2024
 All rights reserved
  """
 
-from online_wikipedia import Online_Wikipedia
 from language_model import Langauge_Model
 
 import logging
