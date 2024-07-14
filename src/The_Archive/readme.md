@@ -1,4 +1,4 @@
-Copywright Abram Jackson 2024
+Copyright Abram Jackson 2024
 All rights reserved
 
 # The Archive: Civilization Rebuilder
@@ -26,11 +26,6 @@ All rights reserved
  * Queries DB with RAG
  * Generates responses
  
-  Database.py
- * Searches index
- * Retrieves articles
- * Retrieves citations
-
  (future) Speech.py 
  * User's voice to text
  * Text to AI voice

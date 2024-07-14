@@ -1,5 +1,5 @@
 """ 
-Copywright Abram Jackson 2024
+Copyright Abram Jackson 2024
 All rights reserved
  """
 

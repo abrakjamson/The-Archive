@@ -1,5 +1,5 @@
 """ 
-Copywright Abram Jackson 2024
+Copyright Abram Jackson 2024
 All rights reserved
  """
 
@@ -24,6 +24,8 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
 import logging
+
+from local_wikipedia import Local_Wikipedia
 
 class Langauge_Model():
 
@@ -57,7 +59,9 @@ class Langauge_Model():
         <|user|>\n{user_question}<|end|>\n
         <|assistant|>\n"""
         prompt_template = PromptTemplate.from_template(template)
-        retriever = WikipediaRetriever(lang="en", doc_content_chars_max=10000, top_k_results=2)
+        # retriever = WikipediaRetriever(lang="en", doc_content_chars_max=10000, top_k_results=2)
+        retriever = Local_Wikipedia()
+#        retriever.do_indexing()
         setup_and_retrieval = RunnableParallel(
             {"context": retriever, "user_question": RunnablePassthrough()}
         )
