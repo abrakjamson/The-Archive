@@ -31,7 +31,7 @@ class Langauge_Model():
 
     def __init__(self, model_name="test", ):
         logging.info("LLM init with model: " + model_name)
-        callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+        callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])        
         self.llm = LlamaCpp(
             model_path=model_name,
             temperature=0.75,
@@ -41,7 +41,7 @@ class Langauge_Model():
             verbose=True,
             n_ctx=8192,
             n_gpu_layers=100
-        )
+        ) 
 
     def process_query(self, query):
         """Primary funtion to process the user's query with database RAG and LLM.
@@ -59,9 +59,10 @@ class Langauge_Model():
         <|user|>\n{user_question}<|end|>\n
         <|assistant|>\n"""
         prompt_template = PromptTemplate.from_template(template)
+        # use this line to use online wikipedia search instead
         # retriever = WikipediaRetriever(lang="en", doc_content_chars_max=10000, top_k_results=2)
         retriever = Local_Wikipedia()
-#        retriever.do_indexing()
+        retriever.do_indexing()
         setup_and_retrieval = RunnableParallel(
             {"context": retriever, "user_question": RunnablePassthrough()}
         )
