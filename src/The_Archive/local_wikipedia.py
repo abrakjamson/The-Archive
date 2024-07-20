@@ -12,17 +12,20 @@ class Local_Wikipedia(BaseRetriever):
     """ Downloads and loads EN Wikipdia, adds it to Elastic Search
         Loads HF's Wikipedia into a list Dataset, downloading if necessary
         https://huggingface.co/datasets/legacy-datasets/wikipedia"""
-    _dataset = load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data", split="train[37%:100%]")
+ #   _dataset = load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data", split="train[37%:100%]")
     _elastic_search_client = Elasticsearch("http://localhost:9200/")
-    if not _elastic_search_client.indices.exists(index="wiki_index"):
-        mappings = {
-                "properties": {
-                    "title": {"type": "text"},
-                    "text": {"type": "text"}
+    try:
+        if not _elastic_search_client.indices.exists(index="wiki_index"):
+            mappings = {
+                    "properties": {
+                        "title": {"type": "text"},
+                        "text": {"type": "text"}
+                    }
                 }
-            }
-        #TODO catch exceptions, such as the server not running
-        _elastic_search_client.indices.create(index="wiki_index", mappings=mappings)
+            #TODO catch exceptions, such as the server not running
+            _elastic_search_client.indices.create(index="wiki_index", mappings=mappings)
+    except ConnectionError:
+        logging.error("Could not connect to ElasticSearch server. Is it running?")
     
     def __init__(self):
         super().__init__()
@@ -32,8 +35,8 @@ class Local_Wikipedia(BaseRetriever):
         # TODO replace this with the correct way to do it
         val = self._elastic_search_client.count(index="wiki_index")['count']
 
-        if val < 6000000:
-            self._dataset.map(self._index_document)
+#        if val < 6000000:
+#            self._dataset.map(self._index_document)
     
     def _index_document(self, article: Document):
         # TODO catch exceptions
@@ -71,27 +74,12 @@ class Local_Wikipedia(BaseRetriever):
     def _execute_elasticsearch_query(self, user_query):
         search_results = self._elastic_search_client.search(
             index="wiki_index", 
-            query={ 
-                "bool": {
-                    "should": [
-                        {
-                            "fuzzy": {
-                                "title": {
-                                    "value": user_query, 
-                                    "fuzziness": "AUTO", 
-                                    "boost": 3}
-                            }
-                        }, 
-                        {
-                            "fuzzy": {
-                                "text": {
-                                    "value": user_query,
-                                    "fuzziness": "AUTO"}
-                            }
-                        }
-                    ]
+            query={
+                "multi_match":
+                {
+                    "query": user_query, 
+                    "fields": ["title^3", "text"]
                 }
             }
         )
         return search_results
-        

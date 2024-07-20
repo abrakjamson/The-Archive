@@ -7,7 +7,7 @@ from language_model import Langauge_Model
 
 import logging
 
-logging.getLogger().setLevel(logging.ERROR)
+logging.getLogger().setLevel(logging.INFO)
 
 def display_answer(llm_result):
     """Displays the result of the LLM processing with citations
@@ -23,11 +23,12 @@ def execution_loop():
     """Runs the processing of the program"""
     while True:
         # unmodified text input. Later may get voice or correct spelling
+        print("What do you want to know?")
         user_input = input()
         result = model.process_query(user_input)
         display_answer(result)
 
-print("Please wait for the model and database to load...")
+print("Please wait for the model to load...")
 # Instantiate
 # model = Langauge_Model(loaded_database, model_name= r"C:\Users\abram\.cache\lm-studio\models\rubra-ai\Phi-3-mini-128k-instruct-GGUF\rubra-phi-3-mini-128k-instruct.Q4_K_M.gguf")
 model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.1-mini-128k-instruct-GGUF\Phi-3.1-mini-128k-instruct-IQ4_XS.gguf")
