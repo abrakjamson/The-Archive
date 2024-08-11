@@ -1,3 +1,9 @@
+""" 
+Copyright Abram Jackson 2024
+All rights reserved
+ """
+
+
 import logging
 from typing import List
 from datasets import load_dataset
