@@ -17,11 +17,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import os
 
-_model_path = "models\\gist-small-embedding-v0.Q8_0.gguf"
-_data_path = "data\\wikimedia___wikipedia"
 
-wiki_dataset = datasets.load_dataset(_data_path)
-subset = wiki_dataset['train'].select(range(2100))
 # Initialize the LlamaCppEmbeddings with the path to your model
 # llama = LlamaCppEmbeddings(model_path=_model_path, n_gpu_layers=33, verbose=False)
 sbert = SentenceTransformer("avsolatorio/GIST-small-Embedding-v0")
@@ -67,6 +63,12 @@ def calculate_embeddings_transformers(examples):
     return results
 
 def process_embeddings():
+    _model_path = "models\\gist-small-embedding-v0.Q8_0.gguf"
+    _data_path = "data\\wikimedia___wikipedia"
+
+    wiki_dataset = datasets.load_dataset(_data_path)
+    subset = wiki_dataset['train'].select(range(2100))
+    
     for i in range(28):
         file_name = f"data\\gist_embeds_{i}.parquet"
         file_name = f"data\\gist_embeds_{i}_1_percent.parquet"
