@@ -42,10 +42,8 @@ class Langauge_Model():
             n_ctx=8192,
             n_gpu_layers=100
         ) 
-        self.search_prompt = """<|system|>Give a comma-separated list of search keywords most likely to find an answer to the user's question. Do NOT answer the question.<|end|>\n<|user|>When was Obama born?<|end|>\n<|assistant|>Barack Obama,United States Presidents,Family of Barack Obama<|end|>\n<|user|>How can I make charcoal?<|end|>\n<|assistant|>Charcoal,Charcoal Kiln,Retort (Chemistry)<|end|>\n<|user|>{user_question}<|end|>\n<|assistant|>"""
-        self.context_prompt = """<|system|>Directly answer the user's question without any extra information. Be as concise as possible. Use only the following context information for the user's question\n{context}<|end|>
-<|user|>{user_question}<|end|>
-<|assistant|>"""
+        self.search_prompt = """<|system|>Give a comma-separated list of search keywords most likely to find an answer to the user's question. Do NOT answer the question.<|end|><|user|>When was Obama born?<|end|><|assistant|>Barack Obama,United States Presidents,Family of Barack Obama<|end|><|user|>How can I make charcoal?<|end|><|assistant|>Charcoal,Charcoal Kiln,Retort (Chemistry)<|end|><|user|>{user_question}<|end|>"""
+        self.context_prompt = """<|system|>Directly answer the user's question without any extra information. Be as concise as possible. Use only the following context information for the user's question{context}<|end|><|user|>{user_question}<|end|>"""
 
     def process_query(self, query):
         """Primary funtion to process the user's query with database RAG and LLM.

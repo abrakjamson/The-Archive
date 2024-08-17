@@ -3,6 +3,8 @@ All rights reserved
 
 # The Archive: Civilization Rebuilder
 
+(Development blog)[https://www.abramjackson.com/tag/the-archive/]
+
 ## Spec
 ## LLM Chain
 1. have LLM identify the subjects of the query
@@ -14,18 +16,22 @@ All rights reserved
 
 
 ## Design
- Application.py
+ app.py
  * Starts program
  * Takes input (text or voice)
  * Displays results (text and voice)
  * Adds citations (queries DB)
  * Manages conversation and memory
 
- LLM.py
- * Executes LLM
+ language_model.py
+ * Executes LLM chain
  * Queries DB with RAG
  * Generates responses
  
+local_wikipedia.py
+* Indexes Wikipedia
+* Queries Elasticsearch
+
  (future) Speech.py 
  * User's voice to text
  * Text to AI voice

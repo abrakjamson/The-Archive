@@ -6,7 +6,7 @@ All rights reserved
 
 import logging
 from typing import List
-from datasets import load_dataset
+from datasets import load_dataset, DownloadMode
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
@@ -18,7 +18,7 @@ class Local_Wikipedia(BaseRetriever):
     """ Downloads and loads EN Wikipdia, adds it to Elastic Search
         Loads HF's Wikipedia into a list Dataset, downloading if necessary
         https://huggingface.co/datasets/legacy-datasets/wikipedia"""
- #   _dataset = load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data", split="train[37%:100%]")
+    _dataset = load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data", download_mode=DownloadMode.FORCE_REDOWNLOAD, split=)
     _elastic_search_client = Elasticsearch("http://localhost:9200/")
     try:
         if not _elastic_search_client.indices.exists(index="wiki_index"):
