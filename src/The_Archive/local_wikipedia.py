@@ -20,6 +20,7 @@ class Local_Wikipedia(BaseRetriever):
         https://huggingface.co/datasets/legacy-datasets/wikipedia"""
     _dataset = load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data", download_mode=DownloadMode.FORCE_REDOWNLOAD, split=)
     _elastic_search_client = Elasticsearch("http://localhost:9200/")
+    
     try:
         if not _elastic_search_client.indices.exists(index="wiki_index"):
             mappings = {
