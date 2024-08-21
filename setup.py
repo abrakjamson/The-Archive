@@ -4,12 +4,13 @@ Copyright Abram Jackson 2024
 
 """
 This module uses the following packages that otherwise aren't needed by the project:
-threadpoolctl, scipy, safetensors, regex, Pillow, joblib, scikit-learn, tokenizers, transformers, sentence-transformers, torch
+threadpoolctl, scipy, safetensors, regex, Pillow, joblib, scikit-learn, tokenizers, transformers, sentence-transformers, torch, sys, pandas
 """
 
 import asyncio
 import logging
 import os
+import sys
 import datasets
 from datasets import Dataset
 from pyarrow import parquet
@@ -24,17 +25,22 @@ from elasticsearch import Elasticsearch, exceptions, helpers
 class Setup:
     def __init__(self, model="avsolatorio/GIST-small-Embedding-v0", elasticsearch_port=9200):
         logging.getLogger().setLevel(logging.WARN)
-        self._sbert = SentenceTransformer(model,cache_folder="../../models/")
+        self._script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+        self._sbert = SentenceTransformer(model,cache_folder=self._script_directory + "/models/")
         self._elastic_search_client = Elasticsearch("http://localhost:" + str(elasticsearch_port))
  
     def download_models(self):
         # GIST model
-        hf_hub_download(cache_dir="../../models",repo_id="avsolatorio/GIST-small-Embedding-v0", filename="model.safetensors")
+        hf_hub_download(
+            cache_dir=self._script_directory + "/models/",
+            repo_id="avsolatorio/GIST-small-Embedding-v0",
+            filename="model.safetensors")
         # Phi-3 mini
-        hf_hub_download(cache_dir="../../models", repo_id="bartowski/Phi-3.1-mini-128k-instruct-GGUF", filename="Phi-3.1-mini-128k-instruct-IQ4_XS.gguf")
+        # already downloaded in init
+        # hf_hub_download(cache_dir="/models", repo_id="bartowski/Phi-3.1-mini-128k-instruct-GGUF", filename="Phi-3.1-mini-128k-instruct-IQ4_XS.gguf")
 
     def download_wikipedia(self):
-        self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="..\\..\\data")
+        self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir=self._script_directory + "/data/")
     
     def process_embeddings(self):
         """ Calculates embeddings for the wikipedia downloaded by download_wikipedia.
@@ -42,25 +48,25 @@ class Setup:
 
             This function should be called after download_models()
         """
-        _data_path = "../../data/wikimedia___wikipedia"
+        _data_path = self._script_directory + "/data/wikimedia___wikipedia"
 
-        wiki_dataset = datasets.load_dataset(_data_path)
-        subset = wiki_dataset['train'].select(range(2100))
+        # for testing, subset to 1500 files
+        self._dataset['train'] = self._dataset['train'].select(range(1500))
         
         for i in range(28):
             # file_name = f"data/gist_embeds_{i}.parquet"
-            file_name = f"data/gist_embeds_{i}_one_percent.parquet"
+            file_name = f"data/gist_embeds/test_{1}.parquet"
             # Check if the file already exists
             if not os.path.exists(file_name):
                 # 6,343,736 wikipedia articles is divisible by 28 = 226,562
                 # So we will make 28 files of 226k each
                 logging.info(f"Will now process for file number {i}")
                 # batch_size = 226562 # all data in 28 batches
-                batch_size = 2266 # for testing, this is 1% of the batch and data size
-                subset = wiki_dataset['train'].select(range(i * batch_size, (i+1) * batch_size))
+                checkpoint_size = 500 # for testing, this is 1% of the batch and data size
+                subset = self._dataset['train'].select(range(i * checkpoint_size, (i+1) * checkpoint_size))
                 dataset = subset.map(self._calculate_embeddings, 
                                      batched=True, 
-                                     batch_size=7000, 
+                                     batch_size=7000,
                                      remove_columns=['url','title','text'])
                 # Writing in chunks to avoid putting it all in memory
                 # 10,000 items should be less than 1 GB
@@ -86,7 +92,7 @@ class Setup:
 
         # Calculate embeddings in batch.
         # From testing, a batch of 700 uses about 11 GB of video memory
-        paragraph_embeddings = self._sbert.encode(embeds['paragraph'], batch_size=700,precision="int8")
+        paragraph_embeddings = self._sbert.encode(embeds['paragraph'], batch_size=500,precision="int8")
         results = {'id': embeds['id'], 'embedding': paragraph_embeddings}
         return results  
 
@@ -94,7 +100,7 @@ class Setup:
         """ Adds the embeddings that were saved to disk to Elasticsearch's index
         """
         # load in the files saved during process_embeddings()
-        file_path = "../../data/gist_embeds"
+        file_path = self._script_directory + "/data/gist_embeds"
         parquet_files = [f for f in os.listdir(file_path) if f.endswith('.parquet')]
         dataframes = [pd.read_parquet(os.path.join(file_path, file)) for file in parquet_files]
         combined_df = pd.concat(dataframes, ignore_index=True)
@@ -174,7 +180,7 @@ class Setup:
         """
         if self._dataset is None:
             logging.warning("Dataset not loaded into memory. Checking cache")
-            if os.path.exists("../../data/wikimedia___wikipedia/"):
+            if os.path.exists(self._script_directory + "/data/wikimedia___wikipedia/"):
                 self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="..\\..\\data")
             else:
                 logging.error("Dataset is not downloaded. Did you call download_wikipedia() first?")
@@ -249,11 +255,11 @@ def clean_up_everything():
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.INFO)
     setup_instance = Setup()
+    logging.getLogger().setLevel(logging.INFO)
     setup_instance.download_models()
     setup_instance.download_wikipedia()
-    setup_instance.index_lexical()
+    #setup_instance.index_lexical()
     setup_instance.process_embeddings()
     setup_instance.index_embeddings()
 
