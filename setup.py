@@ -16,7 +16,7 @@ from datasets import Dataset
 from pyarrow import parquet
 import pandas as pd
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, quantization
 from huggingface_hub import hf_hub_download
 from elasticsearch import Elasticsearch, exceptions, helpers
 
@@ -28,7 +28,7 @@ class Setup:
         self._script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._sbert = SentenceTransformer(model,cache_folder=self._script_directory + "/models/")
         self._elastic_search_client = Elasticsearch("http://localhost:" + str(elasticsearch_port))
- 
+
     def download_models(self):
         # GIST model
         hf_hub_download(
@@ -55,19 +55,20 @@ class Setup:
         
         for i in range(28):
             # file_name = f"data/gist_embeds_{i}.parquet"
-            file_name = f"data/gist_embeds/test_{1}.parquet"
+            file_name = f"data/gist_embeds/gist_embeds_{i}_1_percent.parquet"
             # Check if the file already exists
             if not os.path.exists(file_name):
                 # 6,343,736 wikipedia articles is divisible by 28 = 226,562
                 # So we will make 28 files of 226k each
                 logging.info(f"Will now process for file number {i}")
-                # batch_size = 226562 # all data in 28 batches
-                checkpoint_size = 500 # for testing, this is 1% of the batch and data size
+                checkpoint_size = 226562 # all data in 28 batches
+                # checkpoint_size = 500 # for testing, this is 1% of the batch and data size
                 subset = self._dataset['train'].select(range(i * checkpoint_size, (i+1) * checkpoint_size))
                 dataset = subset.map(self._calculate_embeddings, 
                                      batched=True, 
                                      batch_size=7000,
-                                     remove_columns=['url','title','text'])
+                                     remove_columns=['url','title','text'],
+                                     num_proc=1)
                 # Writing in chunks to avoid putting it all in memory
                 # 10,000 items should be less than 1 GB
                 writer = parquet.ParquetWriter(file_name, dataset.data.schema)
@@ -98,14 +99,20 @@ class Setup:
 
     def index_embeddings(self):
         """ Adds the embeddings that were saved to disk to Elasticsearch's index
-        """
+        
         # load in the files saved during process_embeddings()
+        
         file_path = self._script_directory + "/data/gist_embeds"
         parquet_files = [f for f in os.listdir(file_path) if f.endswith('.parquet')]
         dataframes = [pd.read_parquet(os.path.join(file_path, file)) for file in parquet_files]
         combined_df = pd.concat(dataframes, ignore_index=True)
         embedding_dataset = Dataset.from_pandas(combined_df)
-
+        """
+        embedding_dataset = datasets.load_dataset(
+            "Abrak/wikipedia-paragraph-embeddings-en-gist-complete",
+            cache_dir=self._script_directory + "/data/",
+            split='train[97%:]')
+        
         # If I'm reading the docs correctly, this will set up with int8 HSNW
         # We'll see if 384 bytes per paragraph are going to blow up memory too bad
         #  if so, we can calculate 1 byte embeddings, but index only half-byte
@@ -113,6 +120,9 @@ class Setup:
         # The ID is the article ID used in the dataset, ".", and then 0-indexed paragraph number
         mappings = {
             "properties": {
+                "_souce": {
+                    "enabled": False
+                },
                 "paragraph_id": {"type": "text"},
                 "embedding.predicted_value": { 
                     "type": "dense_vector",
@@ -121,7 +131,9 @@ class Setup:
                 }
             }
         }
+
         try:
+            self._elastic_search_client.indices.delete(index="embedding_index")
             self._elastic_search_client.indices.create(index="embedding_index", mappings=mappings)
         except ConnectionError:
             logging.error("Could not connect to Elasticsearch server. Is it running?")
@@ -131,45 +143,30 @@ class Setup:
 
         # I expect to get bottlenecked on disk IO, so this doesn't need to be in parallel
         # batch of 10,000 should be around 10 MB to send over http at a time
-        embedding_dataset.map(self._add_to_embedding_index, batched=True, batch_size=10000)
+        embedding_dataset.map(Setup._add_to_embedding_index, batched=True, batch_size=50000, num_proc=1)
 
-    def _add_to_embedding_index(self, documents):    
+    @staticmethod
+    def _add_to_embedding_index(documents):    
         """ Indexes a batch of paragraph embeddings into Elasticsearch
         """  
-        bulk_data = []
-        def __generate_data():
-            for i in range(len(documents['id'])):
-                yield {
-                    "_op_type": "index",
-                    "_index": "embedding_index",
-                    "_id": documents['id'][i],
-                    "_source": {
-                        "embedding.predicted_value": documents['embedding'][i]
-                    }
+        elastic_search_client = Elasticsearch("http://localhost:9200")
+        
+        bulk_data = [
+            {
+                "_op_type": "index",
+                "_index": "embedding_index",
+                "_id": documents['id'][i],
+                "_source": {
+                    "embedding.predicted_value": documents['embedding'][i]
                 }
-        # sends the entire batch over http to the ES server
-        # must stay under 100 MB
-        helpers.bulk(self._elastic_search_client, __generate_data())   
+            }
+            for i in range(len(documents['id']))
+        ]
+        
+        # Sends the entire batch over HTTP to the ES server
+        # Must stay under 100 MB
+        helpers.bulk(elastic_search_client, bulk_data)
     
-    def _add_to_lexical_index(self, documents):
-        """Adds a batch of documents to Elasticsearch's index
-        """
-        bulk_data = []
-        def __generate_data():
-            for i in range(len(documents['id'])):
-                yield {
-                    "_op_type": "index",
-                    "_index": "lexical_index",
-                    "_id": documents['id'][i],
-                    "_source": {
-                        "title": documents["title"],
-                        "text": documents["text"]
-                    }
-                }
-        # sends the entire batch over http to the ES server
-        # must stay under 100 MB
-        helpers.bulk(self._elastic_search_client, __generate_data())      
-
     def index_lexical(self):
         """ Adds the downloaded Wikpedia dataset into Elasticsearch for a lexical search.
         Includes only the id, title, and article text.
@@ -181,7 +178,7 @@ class Setup:
         if self._dataset is None:
             logging.warning("Dataset not loaded into memory. Checking cache")
             if os.path.exists(self._script_directory + "/data/wikimedia___wikipedia/"):
-                self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="..\\..\\data")
+                self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data")
             else:
                 logging.error("Dataset is not downloaded. Did you call download_wikipedia() first?")
                 return
@@ -200,7 +197,28 @@ class Setup:
         except exceptions.BadRequestError:
             logging.warn("Lexical index is already created. It will not be modified.")
         
-        self._dataset.map(self._add_to_lexical_index, batched=True, batch_size=1000)
+        self._dataset.map(Setup._add_to_lexical_index, batched=True, batch_size=1000)
+
+    @staticmethod
+    def _add_to_lexical_index(documents):
+        """Adds a batch of documents to Elasticsearch's index
+        """
+        elastic_search_client = Elasticsearch("http://localhost:9200")
+        bulk_data = []
+        def __generate_data():
+            for i in range(len(documents['id'])):
+                bulk_data.append({
+                    "_op_type": "index",
+                    "_index": "lexical_index",
+                    "_id": documents['id'][i],
+                    "_source": {
+                        "title": documents["title"],
+                        "text": documents["text"]
+                    }
+                })
+        # sends the entire batch over http to the ES server
+        # must stay under 100 MB
+        helpers.bulk(elastic_search_client, bulk_data)
 
     def create_elasticsearch_snapshot(self):
         """Backs up the index to the configured repository.
@@ -256,30 +274,42 @@ def clean_up_everything():
 
 if __name__ == "__main__":
     setup_instance = Setup()
-    logging.getLogger().setLevel(logging.INFO)
-    setup_instance.download_models()
-    setup_instance.download_wikipedia()
+    logging.getLogger().setLevel(logging.WARN)
+    #setup_instance.download_models()
+    #setup_instance.download_wikipedia()
     #setup_instance.index_lexical()
-    setup_instance.process_embeddings()
-    setup_instance.index_embeddings()
+    #setup_instance.process_embeddings()
+    #setup_instance.index_embeddings()
+    #setup_instance._elastic_search_client.indices.delete(index="embedding_index")
 
+    
     repository = setup_instance._elastic_search_client.snapshot.get_repository()
-
+    logging.getLogger().setLevel(logging.INFO)
     # should return the embedding of the first paragraph of the first article in the data (Anarchy)
-    elasticsearch_get_result = setup_instance._elastic_search_client.get(index="embedding_index", id="12.0")
+    elasticsearch_get_result = setup_instance._elastic_search_client.get(index="wiki_index", id="3247939")
     if elasticsearch_get_result is not None:
-        logging.info("Getting a record from the Elasticsearch embedding index succeeded.")
+        logging.info("Getting a record from the Elasticsearch wiki index succeeded.")
     else:
-        logging.error("Getting an embedding record from Elasticsearch search failed. Check that the index is created and the index has documents")
-
+        logging.error("Getting an wiki record from Elasticsearch search failed. Check that the index is created and the index has documents")
+    
+    # An accurate similarity search on quantized embeddings requires the search query to be quantized
+    # with the same min and max values of each value
+    embeds = datasets.load_dataset(
+        "wikimedia/wikipedia", 
+        "20231101.en",  
+        cache_dir=setup_instance._script_directory + "/data/",
+        split='train[:20]')
+    paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
+    paragraphs.insert(0, "criticisms of anarchy")
+    embeddings = paragraph_embeddings = setup_instance._sbert.encode(paragraphs, precision="int8")
+    setup_instance._sbert.encode()
     # should return several embeddings with id == 12.*
     elasticsearch_search_embedding = setup_instance._elastic_search_client.search(
             index="embedding_index",
             query={
                 "knn": {
                     "field": "embedding.predicted_value",
-                    # TODO add a calibration embedding when using for real
-                    "query_vector": setup_instance._sbert.encode("criticisms of anarchy")
+                    "query_vector": embeddings[0]
                 }
             }
         )
