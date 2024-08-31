@@ -6,57 +6,25 @@ All rights reserved
 
 import logging
 from typing import List
+import datasets
 from datasets import load_dataset
+import os
+import sys
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from elasticsearch import Elasticsearch
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.quantization import quantize_embeddings
 
-class Local_Wikipedia(BaseRetriever):
+class Wikipedia_Lexical(BaseRetriever):
+    """ Makes a search by keyword to ElasticSearch """   
 
-    """ Downloads and loads EN Wikipdia, adds it to Elastic Search
-        Loads HF's Wikipedia into a list Dataset, downloading if necessary
-        https://huggingface.co/datasets/legacy-datasets/wikipedia"""
-    _dataset = load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data")
     _elastic_search_client = Elasticsearch("http://localhost:9200/")
-    
-    try:
-        if not _elastic_search_client.indices.exists(index="wiki_index"):
-            mappings = {
-                    "properties": {
-                        "title": {"type": "text"},
-                        "text": {"type": "text"}
-                    }
-                }
-            #TODO catch exceptions, such as the server not running
-            _elastic_search_client.indices.create(index="wiki_index", mappings=mappings)
-    except ConnectionError:
-        logging.error("Could not connect to ElasticSearch server. Is it running?")
-    
+
     def __init__(self):
         super().__init__()
-
-    def do_indexing(self):
-        # Skip indexing if there are already documents in the index
-        # TODO replace this with the correct way to do it
-        val = self._elastic_search_client.count(index="wiki_index")['count']
-
-#        if val < 6000000:
-#            self._dataset.map(self._index_document)
-    
-    def _index_document(self, article: Document):
-        # TODO catch exceptions
-        # client.index(index="wiki_index", id=item["id"], document={"title": item["title"],text": item["text"]},) 
-        self._elastic_search_client.index(
-            index="wiki_index",
-            id=article["id"],
-            document=
-            {
-                "title": article["title"],
-                "text": article["text"]
-            }
-        ) 
 
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
         """ Searches local Wikipedia pages in Elastic search for the invoked string.
@@ -90,3 +58,67 @@ class Local_Wikipedia(BaseRetriever):
             }
         )
         return search_results
+    
+class Wikipedia_Semantic(BaseRetriever):
+    """ Makes a semantic query to Elasticsearch """
+
+    _elastic_search_client = Elasticsearch("http://localhost:9200/")
+    _script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+
+    _sbert = SentenceTransformer(
+        "avsolatorio/GIST-small-Embedding-v0",
+        cache_folder=os.path.join(_script_dir, "../../models/"))
+    
+    # Load a few documents to provide calibration embeddings
+    _calibration_articles = datasets.load_dataset(
+        "wikimedia/wikipedia", 
+        "20231101.en",  
+        cache_dir = os.path.join(_script_dir, "../../data/"),
+        split='train[:20]')
+    _calibration_paragraphs = [sub for string in _calibration_articles['text'] for sub in string.split("\n\n")]
+    _calibration_embeddings = _sbert.encode(_calibration_paragraphs, precision="int8")
+  
+    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
+        """ Searches the embedding_index of Elasticsearch with cosine similarity of the query
+            Should be invoked through Langchain invoke. """
+        query_embedding = self._sbert.encode(query)
+        quantized_embedding = quantize_embeddings(query_embedding,calibration_embeddings=self._calibration_embeddings, precision='int8')
+        search_results = self._elastic_search_client.search(
+            index="embedding_index",
+            query={
+                "knn": {
+                    "field": "embedding.predicted_value",
+                    "query_vector": quantized_embedding,
+                }
+            }
+        )
+        the_hits = search_results.body["hits"]["hits"][:10]
+        document_results = []
+        for obj in the_hits:
+            new_obj = {'page_content': self.paragraph_id_to_paragraph(obj['_id'])}
+            document_results.append(new_obj)
+        return document_results
+
+    def paragraph_id_to_article(self, paragraph_id):
+        """ Gets the entire article of the specified paragraph ID"""
+        article = self._elastic_search_client.get(
+            index="wiki_index",
+            id = paragraph_id.split('.')[0]
+        )
+        return article.body
+    
+    def paragraph_id_to_paragraph(self, paragraph_id):
+        """ Gets the text of the paragraph for the specified paragraph ID"""
+        es_record = self.paragraph_id_to_article(paragraph_id)
+        article_text = es_record['_source']['text']
+        paragraphs = article_text.split('\n\n')
+        paragraph_number = int( paragraph_id.split('.')[1] )
+        return paragraphs[paragraph_number]
+        
+if __name__ == "__main__":
+    wikipedia_semantic = Wikipedia_Semantic()
+    search_results = wikipedia_semantic._get_relevant_documents("criticisms of anarchy")
+    print(search_results)
+
+        
+

@@ -25,7 +25,7 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
 import logging
 
-from local_wikipedia import Local_Wikipedia
+from local_wikipedia import Wikipedia_Lexical, Wikipedia_Semantic
 
 class Langauge_Model():
 
@@ -41,9 +41,42 @@ class Langauge_Model():
             verbose=False,
             n_ctx=8192,
             n_gpu_layers=100
-        ) 
-        self.search_prompt = """<|system|>Give a comma-separated list of search keywords most likely to find an answer to the user's question. Do NOT answer the question.<|end|><|user|>When was Obama born?<|end|><|assistant|>Barack Obama,United States Presidents,Family of Barack Obama<|end|><|user|>How can I make charcoal?<|end|><|assistant|>Charcoal,Charcoal Kiln,Retort (Chemistry)<|end|><|user|>{user_question}<|end|>"""
-        self.context_prompt = """<|system|>Directly answer the user's question without any extra information. Be as concise as possible. Use only the following context information for the user's question{context}<|end|><|user|>{user_question}<|end|>"""
+        )
+        # newlines for phi go after the speaker and after the end token
+        self.search_prompt = """<|system|>
+        Give a comma-separated list of search keywords most likely to find an answer to the user's question. Do NOT answer the question.<|end|>
+        <|user|>
+        When was Obama born?<|end|>
+        <|assistant|>
+        Barack Obama,United States Presidents,Family of Barack Obama<|end|>
+        <|user|>
+        How can I make charcoal?<|end|>
+        <|assistant|>
+        Charcoal,Charcoal Kiln,Retort (Chemistry)<|end|>
+        <|user|>
+        {user_question}<|end|>
+        <|assistant|>
+        """
+        self.context_prompt = """<|system|>
+        Directly answer the user's question.
+        Use only the following context information for the user's question:
+        {context}<|end|>
+        <|user|>
+        {user_question}<|end|>
+        <|assistant|>
+        """
+
+        self.answer_prompt = """<|system|>
+        Directly answer the user's question based on two other assistants' attempted answers.
+        Answer only based on the two assistants' answers. First assistant's answer:
+        {lexical_context}
+        
+        Second assistant's answer:
+        {semantic_context}<|end|>
+        <|user|>
+        {user_question}<|end|>
+        <|assistant|>
+        """
 
     def process_query(self, query):
         """Primary funtion to process the user's query with database RAG and LLM.
@@ -54,13 +87,14 @@ class Langauge_Model():
         returns a string of the LLM's response"""
         search_template = PromptTemplate.from_template(self.search_prompt)
         context_template = PromptTemplate.from_template(self.context_prompt)
+        combined_template = PromptTemplate.from_template(self.answer_prompt)
         # use this line to use online wikipedia search instead
         # retriever = WikipediaRetriever(lang="en", doc_content_chars_max=10000, top_k_results=2)
-        retriever = Local_Wikipedia()
-        retriever.do_indexing() #TODO move to setup.py
+        retriever = Wikipedia_Lexical()
+
         output_parser = StrOutputParser()
 
-        # Find the best Wikipedia articles to answer the question
+        # Lexical: Find the best Wikipedia articles to answer the question
         logging.info("Suggested Wikipedia searches:\n")
         search_results = (
             search_template | 
@@ -72,10 +106,41 @@ class Langauge_Model():
             b = a['page_content']
             c = b['title']
             logging.info(article['page_content']['title'])
-        # Answer the question using the Wikipedia articles
-        logging.info("Generating answer:\n")
-        answer = (
+        
+        # Answer the question using the lexical Wikipedia articles
+        logging.info("Generating lexical answer\n")
+        lexical_answer = (
             context_template | 
             self.llm | 
             output_parser).invoke({"context": context_results, "user_question": query})
-        return f"Answer:\n {answer}"
+        logging.info(lexical_answer)
+
+        # Semantic: Find the best Wikipediaparagraps to answer the question
+        retriever = Wikipedia_Semantic()
+        semantic_paragraphs = retriever.invoke(query)
+        
+        # Answer the question using the semantic Wikipedia paragraphs
+        logging.info("Generating semantic answer\n")
+        semantic_answer = (
+            context_template | 
+            self.llm | 
+            output_parser).invoke({"context": semantic_paragraphs, "user_question": query})
+        logging.info(semantic_answer)
+        
+        # Summarize from the best of the lexical and semantic answers
+        combined_answer = (
+            combined_template |
+            self.llm |
+            output_parser).invoke({
+                "lexical_context": lexical_answer,
+                "semantic_context": semantic_answer,
+                 "user_question": query })
+        logging.info(combined_answer)
+
+        return f"Answer:\n {combined_answer}"
+    
+if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
+    debug_language_model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\lmstudio-community/gemma-2-2b/gemma-2-2b-it-Q8_0.gguf")
+    answer = debug_language_model.process_query("Why did communism fail in China?")
+    print(answer)
