@@ -81,14 +81,24 @@ class Wikipedia_Semantic(BaseRetriever):
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
         """ Searches the embedding_index of Elasticsearch with cosine similarity of the query
             Should be invoked through Langchain invoke. """
+        """
         query_embedding = self._sbert.encode(query)
         quantized_embedding = quantize_embeddings(query_embedding,calibration_embeddings=self._calibration_embeddings, precision='int8')
+        """
+        embeds = datasets.load_dataset(
+            "wikimedia/wikipedia", 
+            "20231101.en",  
+            cache_dir=os.path.join(self._script_dir, "../../data/"),
+            split='train[:20]')
+        paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
+        paragraphs.insert(0, query)
+        quantized_embedding = self._sbert.encode(paragraphs, precision="int8")
         search_results = self._elastic_search_client.search(
             index="embedding_index",
             query={
                 "knn": {
                     "field": "embedding.predicted_value",
-                    "query_vector": quantized_embedding,
+                    "query_vector": quantized_embedding[0],
                 }
             }
         )
@@ -96,7 +106,7 @@ class Wikipedia_Semantic(BaseRetriever):
         document_results = []
         for obj in the_hits:
             new_obj = {'page_content': self.paragraph_id_to_paragraph(obj['_id'])}
-            document_results.append(new_obj)
+            logging.info(obj['_id'])
         return document_results
 
     def paragraph_id_to_article(self, paragraph_id):
@@ -111,6 +121,7 @@ class Wikipedia_Semantic(BaseRetriever):
         """ Gets the text of the paragraph for the specified paragraph ID"""
         es_record = self.paragraph_id_to_article(paragraph_id)
         article_text = es_record['_source']['text']
+        logging.info(es_record['_source']['title'])
         paragraphs = article_text.split('\n\n')
         paragraph_number = int( paragraph_id.split('.')[1] )
         return paragraphs[paragraph_number]
@@ -120,5 +131,16 @@ if __name__ == "__main__":
     search_results = wikipedia_semantic._get_relevant_documents("criticisms of anarchy")
     print(search_results)
 
-        
-
+    
+from elasticsearch import Elasticsearch
+_elastic_search_client = Elasticsearch("http://localhost:9200/")
+search_results = _elastic_search_client.get(
+    index="embedding_index",
+    id = "12.19")
+print(search_results)
+_elastic_search_client.indices.get(
+    index="embedding_index",
+)
+_elastic_search_client.count(
+    index="embedding_index",
+)

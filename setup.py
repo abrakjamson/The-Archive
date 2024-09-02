@@ -111,7 +111,7 @@ class Setup:
         embedding_dataset = datasets.load_dataset(
             "Abrak/wikipedia-paragraph-embeddings-en-gist-complete",
             cache_dir=self._script_directory + "/data/",
-            split='train[97%:]')
+            split='train[:20]')
         
         # If I'm reading the docs correctly, this will set up with int8 HSNW
         # We'll see if 384 bytes per paragraph are going to blow up memory too bad
@@ -133,7 +133,7 @@ class Setup:
         }
 
         try:
-            self._elastic_search_client.indices.delete(index="embedding_index")
+            #self._elastic_search_client.indices.delete(index="embedding_index")
             self._elastic_search_client.indices.create(index="embedding_index", mappings=mappings)
         except ConnectionError:
             logging.error("Could not connect to Elasticsearch server. Is it running?")
@@ -301,8 +301,8 @@ if __name__ == "__main__":
         split='train[:20]')
     paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
     paragraphs.insert(0, "criticisms of anarchy")
-    embeddings = paragraph_embeddings = setup_instance._sbert.encode(paragraphs, precision="int8")
-    setup_instance._sbert.encode()
+    embeddings = setup_instance._sbert.encode(paragraphs, precision="int8")
+
     # should return several embeddings with id == 12.*
     elasticsearch_search_embedding = setup_instance._elastic_search_client.search(
             index="embedding_index",

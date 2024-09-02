@@ -142,5 +142,6 @@ class Langauge_Model():
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     debug_language_model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\lmstudio-community/gemma-2-2b/gemma-2-2b-it-Q8_0.gguf")
-    answer = debug_language_model.process_query("Why did communism fail in China?")
+    answer = debug_language_model.process_query("criticisms of anarchy")
+    #answer = debug_language_model.process_query(r"In contrast, Edmund Burke's 1756 work A Vindication of Natural Society, argued in favour of anarchist society in a defense of the state of nature. Burke insisted that reason was all that was needed to govern society and that \"artificial laws\" had been responsible for all social conflict and inequality, which led him to denounce the church and the state. Burke's anti-statist arguments preceded the work of classical anarchists and directly inspired the political philosophy of William Godwin.")
     print(answer)
