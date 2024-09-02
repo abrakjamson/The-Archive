@@ -26,13 +26,13 @@ class Setup:
     def __init__(self, model="avsolatorio/GIST-small-Embedding-v0", elasticsearch_port=9200):
         logging.getLogger().setLevel(logging.WARN)
         self._script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
-        self._sbert = SentenceTransformer(model,cache_folder=self._script_directory + "/models/")
+        self._sbert = SentenceTransformer(model,cache_folder= os.path.join(self._script_directory, "/models/"))
         self._elastic_search_client = Elasticsearch("http://localhost:" + str(elasticsearch_port))
 
     def download_models(self):
         # GIST model
         hf_hub_download(
-            cache_dir=self._script_directory + "/models/",
+            cache_dir= os.path.join(self._script_directory, "/models/"),
             repo_id="avsolatorio/GIST-small-Embedding-v0",
             filename="model.safetensors")
         # Phi-3 mini
@@ -40,7 +40,7 @@ class Setup:
         # hf_hub_download(cache_dir="/models", repo_id="bartowski/Phi-3.1-mini-128k-instruct-GGUF", filename="Phi-3.1-mini-128k-instruct-IQ4_XS.gguf")
 
     def download_wikipedia(self):
-        self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir=self._script_directory + "/data/")
+        self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir= os.path.join(self._script_directory, "/data/"))
     
     def process_embeddings(self):
         """ Calculates embeddings for the wikipedia downloaded by download_wikipedia.
@@ -48,7 +48,7 @@ class Setup:
 
             This function should be called after download_models()
         """
-        _data_path = self._script_directory + "/data/wikimedia___wikipedia"
+        _data_path = os.path.join(self._script_directory, "/data/wikimedia___wikipedia")
 
         # for testing, subset to 1500 files
         self._dataset['train'] = self._dataset['train'].select(range(1500))
@@ -110,7 +110,7 @@ class Setup:
         """
         embedding_dataset = datasets.load_dataset(
             "Abrak/wikipedia-paragraph-embeddings-en-gist-complete",
-            cache_dir=self._script_directory + "/data/",
+            cache_dir= os.path.join(self._script_directory, "/data/"),
             split='train[:20]')
         
         # If I'm reading the docs correctly, this will set up with int8 HSNW
@@ -177,7 +177,7 @@ class Setup:
         """
         if self._dataset is None:
             logging.warning("Dataset not loaded into memory. Checking cache")
-            if os.path.exists(self._script_directory + "/data/wikimedia___wikipedia/"):
+            if os.path.exists(os.path.join(self._script_directory, "/data/wikimedia___wikipedia/")):
                 self._dataset = datasets.load_dataset("wikimedia/wikipedia", "20231101.en",  cache_dir="data")
             else:
                 logging.error("Dataset is not downloaded. Did you call download_wikipedia() first?")
@@ -275,12 +275,12 @@ def clean_up_everything():
 if __name__ == "__main__":
     setup_instance = Setup()
     logging.getLogger().setLevel(logging.WARN)
-    #setup_instance.download_models()
-    #setup_instance.download_wikipedia()
-    #setup_instance.index_lexical()
-    #setup_instance.process_embeddings()
-    #setup_instance.index_embeddings()
-    #setup_instance._elastic_search_client.indices.delete(index="embedding_index")
+    setup_instance.download_models()
+    setup_instance.download_wikipedia()
+    setup_instance.index_lexical()
+    setup_instance.process_embeddings()
+    setup_instance.index_embeddings()
+    setup_instance._elastic_search_client.indices.delete(index="embedding_index")
 
     
     repository = setup_instance._elastic_search_client.snapshot.get_repository()
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     embeds = datasets.load_dataset(
         "wikimedia/wikipedia", 
         "20231101.en",  
-        cache_dir=setup_instance._script_directory + "/data/",
+        cache_dir= os.path.join(setup_instance._script_directory, "/data/"),
         split='train[:20]')
     paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
     paragraphs.insert(0, "criticisms of anarchy")

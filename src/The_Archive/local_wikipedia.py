@@ -87,7 +87,7 @@ class Wikipedia_Semantic(BaseRetriever):
         """
         embeds = datasets.load_dataset(
             "wikimedia/wikipedia", 
-            "20231101.en",  
+            "20231101.en",
             cache_dir=os.path.join(self._script_dir, "../../data/"),
             split='train[:20]')
         paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
