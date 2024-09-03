@@ -26,13 +26,13 @@ class Setup:
     def __init__(self, model="avsolatorio/GIST-small-Embedding-v0", elasticsearch_port=9200):
         logging.getLogger().setLevel(logging.WARN)
         self._script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
-        self._sbert = SentenceTransformer(model,cache_folder= os.path.join(self._script_directory, "/models/"))
+        self._sbert = SentenceTransformer(model,cache_folder= os.path.join(self._script_directory, "models"))
         self._elastic_search_client = Elasticsearch("http://localhost:" + str(elasticsearch_port))
 
     def download_models(self):
         # GIST model
         hf_hub_download(
-            cache_dir= os.path.join(self._script_directory, "/models/"),
+            cache_dir= os.path.join(self._script_directory, "models"),
             repo_id="avsolatorio/GIST-small-Embedding-v0",
             filename="model.safetensors")
         # Phi-3 mini
@@ -48,7 +48,7 @@ class Setup:
 
             This function should be called after download_models()
         """
-        _data_path = os.path.join(self._script_directory, "/data/wikimedia___wikipedia")
+        _data_path = os.path.join(self._script_directory, "data/wikimedia___wikipedia")
 
         # for testing, subset to 1500 files
         self._dataset['train'] = self._dataset['train'].select(range(1500))
@@ -110,8 +110,8 @@ class Setup:
         """
         embedding_dataset = datasets.load_dataset(
             "Abrak/wikipedia-paragraph-embeddings-en-gist-complete",
-            cache_dir= os.path.join(self._script_directory, "/data/"),
-            split='train[:20]')
+            cache_dir= os.path.join(self._script_directory, "data"),
+            split='train[:20%]')
         
         # If I'm reading the docs correctly, this will set up with int8 HSNW
         # We'll see if 384 bytes per paragraph are going to blow up memory too bad
@@ -135,11 +135,12 @@ class Setup:
         try:
             #self._elastic_search_client.indices.delete(index="embedding_index")
             self._elastic_search_client.indices.create(index="embedding_index", mappings=mappings)
+            # Allows for sorting on the _id field
         except ConnectionError:
             logging.error("Could not connect to Elasticsearch server. Is it running?")
             return
         except exceptions.BadRequestError:
-            logging.warn("Embedding index is already created. It will not be modified.")     
+            logging.warning("Embedding index is already created. It will not be modified.")     
 
         # I expect to get bottlenecked on disk IO, so this doesn't need to be in parallel
         # batch of 10,000 should be around 10 MB to send over http at a time
@@ -275,12 +276,11 @@ def clean_up_everything():
 if __name__ == "__main__":
     setup_instance = Setup()
     logging.getLogger().setLevel(logging.WARN)
-    setup_instance.download_models()
-    setup_instance.download_wikipedia()
-    setup_instance.index_lexical()
-    setup_instance.process_embeddings()
-    setup_instance.index_embeddings()
-    setup_instance._elastic_search_client.indices.delete(index="embedding_index")
+    #setup_instance.download_models()
+    #setup_instance.download_wikipedia()
+    #setup_instance.index_lexical()
+    #setup_instance.process_embeddings()
+    #setup_instance.index_embeddings()
 
     
     repository = setup_instance._elastic_search_client.snapshot.get_repository()

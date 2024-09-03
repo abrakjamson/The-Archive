@@ -6,11 +6,11 @@ All rights reserved
 
 import logging
 from typing import List
-import datasets
-from datasets import load_dataset
 import os
 import sys
 
+import datasets
+from datasets import load_dataset
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
@@ -106,7 +106,7 @@ class Wikipedia_Semantic(BaseRetriever):
         document_results = []
         for obj in the_hits:
             new_obj = {'page_content': self.paragraph_id_to_paragraph(obj['_id'])}
-            logging.info(obj['_id'])
+            logging.debug(obj['_id'])
         return document_results
 
     def paragraph_id_to_article(self, paragraph_id):
@@ -121,15 +121,15 @@ class Wikipedia_Semantic(BaseRetriever):
         """ Gets the text of the paragraph for the specified paragraph ID"""
         es_record = self.paragraph_id_to_article(paragraph_id)
         article_text = es_record['_source']['text']
-        logging.info(es_record['_source']['title'])
+        logging.debug(es_record['_source']['title'])
         paragraphs = article_text.split('\n\n')
         paragraph_number = int( paragraph_id.split('.')[1] )
         return paragraphs[paragraph_number]
         
 if __name__ == "__main__":
     wikipedia_semantic = Wikipedia_Semantic()
-    search_results = wikipedia_semantic._get_relevant_documents("criticisms of anarchy")
-    print(search_results)
+    search_results = wikipedia_semantic.invoke("criticisms of anarchy")
+    logging.info(search_results)
 
     
 from elasticsearch import Elasticsearch

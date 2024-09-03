@@ -3,34 +3,23 @@ Copyright Abram Jackson 2024
 All rights reserved
  """
 
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import TextLoader
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import (
-    CharacterTextSplitter,
-)
-from langchain.prompts.chat import (
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.prompts import ChatPromptTemplate
+import logging
+
 from langchain.schema import StrOutputParser
-from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain.schema.runnable import RunnablePassthrough
 from langchain_community.llms import LlamaCpp
 from langchain_community.retrievers import WikipediaRetriever
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-
-import logging
 
 from local_wikipedia import Wikipedia_Lexical, Wikipedia_Semantic
 
 class Langauge_Model():
 
     def __init__(self, model_name="test", ):
-        logging.info("LLM init with model: " + model_name)
+        logging.debug("LLM init with model: " + model_name)
         callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])        
         self.llm = LlamaCpp(
             model_path=model_name,
@@ -105,7 +94,7 @@ class Langauge_Model():
             a = article
             b = a['page_content']
             c = b['title']
-            logging.info(article['page_content']['title'])
+            logging.debug(article['page_content']['title'])
         
         # Answer the question using the lexical Wikipedia articles
         logging.info("Generating lexical answer\n")
@@ -141,7 +130,7 @@ class Langauge_Model():
     
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    debug_language_model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\lmstudio-community/gemma-2-2b/gemma-2-2b-it-Q8_0.gguf")
+    debug_language_model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.5-mini-instruct-GGUF\Phi-3.5-mini-instruct-Q4_K_M.gguf")
     answer = debug_language_model.process_query("criticisms of anarchy")
     #answer = debug_language_model.process_query(r"In contrast, Edmund Burke's 1756 work A Vindication of Natural Society, argued in favour of anarchist society in a defense of the state of nature. Burke insisted that reason was all that was needed to govern society and that \"artificial laws\" had been responsible for all social conflict and inequality, which led him to denounce the church and the state. Burke's anti-statist arguments preceded the work of classical anarchists and directly inspired the political philosophy of William Godwin.")
     print(answer)
