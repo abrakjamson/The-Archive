@@ -68,15 +68,6 @@ class Wikipedia_Semantic(BaseRetriever):
     _sbert = SentenceTransformer(
         "avsolatorio/GIST-small-Embedding-v0",
         cache_folder=os.path.join(_script_dir, "../../models/"))
-    
-    # Load a few documents to provide calibration embeddings
-    _calibration_articles = datasets.load_dataset(
-        "wikimedia/wikipedia", 
-        "20231101.en",  
-        cache_dir = os.path.join(_script_dir, "../../data/"),
-        split='train[:20]')
-    _calibration_paragraphs = [sub for string in _calibration_articles['text'] for sub in string.split("\n\n")]
-    _calibration_embeddings = _sbert.encode(_calibration_paragraphs, precision="int8")
   
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
         """ Searches the embedding_index of Elasticsearch with cosine similarity of the query
@@ -130,17 +121,3 @@ if __name__ == "__main__":
     wikipedia_semantic = Wikipedia_Semantic()
     search_results = wikipedia_semantic.invoke("criticisms of anarchy")
     logging.info(search_results)
-
-    
-from elasticsearch import Elasticsearch
-_elastic_search_client = Elasticsearch("http://localhost:9200/")
-search_results = _elastic_search_client.get(
-    index="embedding_index",
-    id = "12.19")
-print(search_results)
-_elastic_search_client.indices.get(
-    index="embedding_index",
-)
-_elastic_search_client.count(
-    index="embedding_index",
-)

@@ -3,7 +3,7 @@ Copyright Abram Jackson 2024
 All rights reserved
  """
 
-from language_model import Langauge_Model
+from The_Archive.language_model import Language_Model
 
 import logging
 
@@ -31,7 +31,7 @@ def execution_loop():
 print("Please wait for the model to load...")
 # Instantiate
 # model = Langauge_Model(loaded_database, model_name= r"C:\Users\abram\.cache\lm-studio\models\rubra-ai\Phi-3-mini-128k-instruct-GGUF\rubra-phi-3-mini-128k-instruct.Q4_K_M.gguf")
-model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.1-mini-128k-instruct-GGUF\Phi-3.1-mini-128k-instruct-IQ4_XS.gguf")
+model = Language_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.1-mini-128k-instruct-GGUF\Phi-3.1-mini-128k-instruct-IQ4_XS.gguf")
 
 print("Ready")
 execution_loop()

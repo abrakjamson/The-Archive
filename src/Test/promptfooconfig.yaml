@@ -1,0 +1,29 @@
+# Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
+description: "Fact Retrieval"
+
+prompts:
+  - |
+    Give a comma-separated list of search keywords most likely to find an answer to the user's question. Do NOT answer the question.
+    <|user|>
+    When was Obama born?<|end|>
+    <|assistant|>
+    Barack Obama,United States Presidents,Family of Barack Obama<|end|>
+    <|user|>
+    How can I make charcoal?<|end|>
+    <|assistant|>
+    Charcoal,Charcoal Kiln,Retort (Chemistry)<|end|>
+    <|user|>
+    {{inquiry}}<|end|>
+    <|assistant|>
+
+providers:
+  - id: "python:app_test.py"
+    config:
+    pythonExecutable: .venv/Scripts/python.exe
+
+tests:
+  - vars:
+      inquiry: "when did Donatien Alphonse François write Juliette?"
+    assert:
+      - type: icontains
+        value: "1797"

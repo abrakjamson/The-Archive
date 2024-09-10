@@ -14,11 +14,14 @@ from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHan
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
-from local_wikipedia import Wikipedia_Lexical, Wikipedia_Semantic
+from ..The_Archive.local_wikipedia import Wikipedia_Lexical, Wikipedia_Semantic
+from ..The_Archive.prompt_templates import Prompt_Templates
 
-class Langauge_Model():
+class Language_Model():
 
-    def __init__(self, model_name="test", ):
+    logging.basicConfig(filename='debug.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    def __init__(self, model_name=r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.5-mini-instruct-GGUF\Phi-3.5-mini-instruct-Q4_K_M.gguf", ):
         logging.debug("LLM init with model: " + model_name)
         callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])        
         self.llm = LlamaCpp(
@@ -31,41 +34,12 @@ class Langauge_Model():
             n_ctx=8192,
             n_gpu_layers=100
         )
-        # newlines for phi go after the speaker and after the end token
-        self.search_prompt = """<|system|>
-        Give a comma-separated list of search keywords most likely to find an answer to the user's question. Do NOT answer the question.<|end|>
-        <|user|>
-        When was Obama born?<|end|>
-        <|assistant|>
-        Barack Obama,United States Presidents,Family of Barack Obama<|end|>
-        <|user|>
-        How can I make charcoal?<|end|>
-        <|assistant|>
-        Charcoal,Charcoal Kiln,Retort (Chemistry)<|end|>
-        <|user|>
-        {user_question}<|end|>
-        <|assistant|>
-        """
-        self.context_prompt = """<|system|>
-        Directly answer the user's question.
-        Use only the following context information for the user's question:
-        {context}<|end|>
-        <|user|>
-        {user_question}<|end|>
-        <|assistant|>
-        """
-
-        self.answer_prompt = """<|system|>
-        Directly answer the user's question based on two other assistants' attempted answers.
-        Answer only based on the two assistants' answers. First assistant's answer:
-        {lexical_context}
+        logging.debug("Model is loaded")
         
-        Second assistant's answer:
-        {semantic_context}<|end|>
-        <|user|>
-        {user_question}<|end|>
-        <|assistant|>
-        """
+        ArchivePrompts = Prompt_Templates() # can specify different model token formats here
+        self.search_prompt = ArchivePrompts.search_prompt()
+        self.context_prompt = ArchivePrompts.context_prompt()
+        self.answer_prompt = ArchivePrompts.answer_prompt()
 
     def process_query(self, query):
         """Primary funtion to process the user's query with database RAG and LLM.
@@ -130,7 +104,7 @@ class Langauge_Model():
     
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    debug_language_model = Langauge_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.5-mini-instruct-GGUF\Phi-3.5-mini-instruct-Q4_K_M.gguf")
+    debug_language_model = Language_Model(model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.5-mini-instruct-GGUF\Phi-3.5-mini-instruct-Q4_K_M.gguf")
     answer = debug_language_model.process_query("criticisms of anarchy")
     #answer = debug_language_model.process_query(r"In contrast, Edmund Burke's 1756 work A Vindication of Natural Society, argued in favour of anarchist society in a defense of the state of nature. Burke insisted that reason was all that was needed to govern society and that \"artificial laws\" had been responsible for all social conflict and inequality, which led him to denounce the church and the state. Burke's anti-statist arguments preceded the work of classical anarchists and directly inspired the political philosophy of William Godwin.")
     print(answer)

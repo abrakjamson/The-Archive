@@ -13,7 +13,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
 
 
-class Generate_Test_Quesitions:
+class Generate_Essay_Quesitions:
     """ Creates a file with test questions based on the first 20 articles of Wikipedia.
 
     1. Gets the article text from the data
@@ -99,5 +99,5 @@ If the article is unsuitable for essay questions, return only a newline.<|end|>
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
-    generate_test_questions = Generate_Test_Quesitions()
+    generate_test_questions = Generate_Essay_Quesitions()
     generate_test_questions.generate()
