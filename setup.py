@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 import datasets
+import json
 from datasets import Dataset
 from pyarrow import parquet
 import pandas as pd
@@ -25,7 +26,10 @@ from elasticsearch import Elasticsearch, exceptions, helpers
 class Setup:
     def __init__(self, model="avsolatorio/GIST-small-Embedding-v0", elasticsearch_port=9200):
         logging.getLogger().setLevel(logging.WARN)
-        self._script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+        
+        # Adding the root of the project into the .env file, to allow it to run from any directory
+        os.environ['PROJECT_ROOT'] = os.path.abspath(os.path.dirname(__file__))
+
         self._sbert = SentenceTransformer(model,cache_folder= os.path.join(self._script_directory, "models"))
         self._elastic_search_client = Elasticsearch("http://localhost:" + str(elasticsearch_port))
 
@@ -297,7 +301,7 @@ if __name__ == "__main__":
     embeds = datasets.load_dataset(
         "wikimedia/wikipedia", 
         "20231101.en",  
-        cache_dir= os.path.join(setup_instance._script_directory, "/data/"),
+        cache_dir= os.path.join(setup_instance._script_directory, "data/"),
         split='train[:20]')
     paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
     paragraphs.insert(0, "criticisms of anarchy")

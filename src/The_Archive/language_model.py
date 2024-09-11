@@ -97,7 +97,7 @@ class Language_Model():
             output_parser).invoke({
                 "lexical_context": lexical_answer,
                 "semantic_context": semantic_answer,
-                 "user_question": query })
+                "user_question": query })
         logging.info(combined_answer)
 
         return f"Answer:\n {combined_answer}"

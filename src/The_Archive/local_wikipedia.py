@@ -63,11 +63,14 @@ class Wikipedia_Semantic(BaseRetriever):
     """ Makes a semantic query to Elasticsearch """
 
     _elastic_search_client = Elasticsearch("http://localhost:9200/")
-    _script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    
+    _script_dir = os.getenv('PROJECT_ROOT')
+    if _script_dir not in sys.path:
+        sys.path.insert(0, _script_dir)
 
     _sbert = SentenceTransformer(
         "avsolatorio/GIST-small-Embedding-v0",
-        cache_folder=os.path.join(_script_dir, "../../models/"))
+        cache_folder=os.path.join(_script_dir, "models/"))
   
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
         """ Searches the embedding_index of Elasticsearch with cosine similarity of the query
@@ -76,10 +79,11 @@ class Wikipedia_Semantic(BaseRetriever):
         query_embedding = self._sbert.encode(query)
         quantized_embedding = quantize_embeddings(query_embedding,calibration_embeddings=self._calibration_embeddings, precision='int8')
         """
+        logging.debug(f"local_wikipedia script dir is {self._script_dir}")
         embeds = datasets.load_dataset(
             "wikimedia/wikipedia", 
             "20231101.en",
-            cache_dir=os.path.join(self._script_dir, "../../data/"),
+            cache_dir=os.path.join(self._script_dir, "data/"),
             split='train[:20]')
         paragraphs = [sub for string in embeds['text'] for sub in string.split("\n\n")]
         paragraphs.insert(0, query)

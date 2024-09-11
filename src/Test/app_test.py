@@ -4,6 +4,10 @@ print("running app_test.py")
 import sys
 import os
 from typing import Dict, Any
+import logging
+
+if 'PROJECT_ROOT' not in os.environ:
+    os.environ['PROJECT_ROOT'] = 'C:/Users/abram/Documents/The-Archive'
 
 # Promptfoo will call this file as a script, so we need to add the source into sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -24,8 +28,7 @@ def call_api(prompt, options: Dict[str, any], context):
     - 'prompt type' one of 'lexical', 'context', or 'synthesis'
     - 'model' is a Huggingface model path
     """
-    with open("logfile.log", "a") as log_file: log_file.write("running call_api\n")
-    print("running call_api")
+
     prompt_type = options.get('prompt type', None)
     model = options.get('model', None)
     if model is not None:
@@ -41,7 +44,9 @@ def call_api(prompt, options: Dict[str, any], context):
     elif prompt_type == "synthesis":
         archive.answer_prompt = prompt
 
-    output = archive.process_query(prompt)
+    # The user's actual question is in the configuration
+    inquiry = context['vars'].get('inquiry', "report a missing inquiry")
+    output = archive.process_query(inquiry)
 
     result = {
         "output": output
@@ -51,11 +56,7 @@ def call_api(prompt, options: Dict[str, any], context):
 
 if __name__ == "__main__":
     # null test of just functionality
-    with open("logfile.log", "a") as log_file: log_file.write("running script directly\n")
-    print("running script directly")
     templates = Prompt_Templates()
     prompt_to_test = templates.search_prompt()
     model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.5-mini-instruct-GGUF\Phi-3.5-mini-instruct-Q4_K_M.gguf"
     call_api(templates.search_prompt(), {"prompt type": "lexical", "model": model_name}, context= None)
-
-with open("logfile.log", "a") as log_file: log_file.write("end of app_test.py\n")
