@@ -21,9 +21,646 @@ providers:
     config:
     pythonExecutable: .venv/Scripts/python.exe
 
+evaluateOptions:
+  maxConcurrency: 1
+  showProgressBar: true
+  
 tests:
-  - vars:
-      inquiry: "when did Donatien Alphonse François write Juliette?"
-    assert:
-      - type: icontains
-        value: "1797"
+- vars:
+    inquiry: Who is considered the first political philosopher to call himself an
+      anarchist?
+  assert:
+  - type: icontains
+    value: Pierre-Joseph Proudhon
+- vars:
+    inquiry: What is the main political stance of collectivist anarchism as founded
+      by Mikhail Bakunin?
+  assert:
+  - type: icontains
+    value: Political abstentionism
+- vars:
+    inquiry: '''Stirner''s thinking paved the way to what individualistic concept
+      in relation to state and society?'
+  assert:
+  - type: icontains
+    value: Individualism
+- vars:
+    inquiry: '''Anarchism'' in Greek origin refers to what term?'
+  assert:
+  - type: icontains
+    value: "\u03B1\u03BD\u03B1\u03C1\u03C7\u03AF\u03B1"
+- vars:
+    inquiry: Which philosopher wrote about the limitations of state action and implicitly
+      criticized anarchy, who was a proponent before Karl Marx?
+  assert:
+  - type: icontains
+    value: Wilhelm von Humboldt
+- vars:
+    inquiry: '''Anarchism''s significant historical formation took place in what year?'
+  assert:
+  - type: icontains
+    value: '1864'
+- vars:
+    inquiry: Which philosopher is known for opposing anarchy, favoring the social
+      contract?
+  assert:
+  - type: icontains
+    value: Thomas Hobbes
+- vars:
+    inquiry: What term describes the concept where darker surfaces absorb more heat
+      due to lower albedo?
+  assert:
+  - type: icontains
+    value: Snowmelt
+- vars:
+    inquiry: What is the hexadecimal representation for the letter A in decimal system?
+  assert:
+  - type: icontains
+    value: '10'
+- vars:
+    inquiry: Which language uses 'A' to denote an open front unrounded vowel according
+      to International Phonetic Alphabet (IPA)?
+  assert:
+  - type: icontains
+    value: English
+- vars:
+    inquiry: In algebra, what does the letter 'a' commonly denote?
+  assert:
+  - type: icontains
+    value: Variable
+- vars:
+    inquiry: When was Alabama admitted as a state?
+  assert:
+  - type: icontains
+    value: December 14, 1819
+- vars:
+    inquiry: Who was the personal physician of King Amyntas of Macedon before his
+      death around which age did Aristotle learn biology and medical information?
+  assert:
+  - type: icontains
+    value: Nicomachus; thirteen
+- vars:
+    inquiry: '''The First Teacher'' is a title given to Aristotle by medieval Muslim
+      scholars. What religion were these scholars associated with?'
+  assert:
+  - type: icontains
+    value: Islamic philosophy
+- vars:
+    inquiry: In which city did Aristotle establish his school known as the Lyceum
+      after leaving Athens in 348/47 BC?
+  assert:
+  - type: icontains
+    value: Chalcis, Euboea
+- vars:
+    inquiry: What is the philosophical term for universals according to Aristotle's
+      theory that they exist within each thing on which a universal is predicated?
+  assert:
+  - type: icontains
+    value: Instantiation
+- vars:
+    inquiry: In what year was the category name changed from Best Art Direction to
+      its current title?
+  assert:
+  - type: icontains
+    value: '2012'
+- vars:
+    inquiry: How many times has Cedric Gibbons won the Academy Award for Production
+      Design?
+  assert:
+  - type: icontains
+    value: '11'
+- vars:
+    inquiry: '''The International Workingmen''s Association'', founded year, is related
+      with which event discussed here?'
+  assert:
+  - type: icontains
+    value: '1864'
+- vars:
+    inquiry: '''Harry Horner'' among the individuals listed won how many Academy Awards
+      for Production Design?'
+  assert:
+  - type: icontains
+    value: '2'
+- vars:
+    inquiry: Who sculpted the Oscar statuette?
+  assert:
+  - type: icontains
+    value: George Stanley
+- vars:
+    inquiry: '''Oscar'' is a registered trademark of which organization?'
+  assert:
+  - type: icontains
+    value: AMPAS
+- vars:
+    inquiry: "Who played the international diva Gl\xF2ria Marc in Actrius?"
+  assert:
+  - type: icontains
+    value: "N\xFAria Espert"
+- vars:
+    inquiry: When did the International Workingmen's Association get founded in relation
+      to Actrius?
+  assert:
+  - type: icontains
+    value: '1864'
+- vars:
+    inquiry: In what language was the film 'Actrius' produced and directed by Ventura
+      Pons?
+  assert:
+  - type: icontains
+    value: Catalan Spanish
+- vars:
+    inquiry: In what year was the original edition of Animalia published?
+  assert:
+  - type: icontains
+    value: '1986'
+- vars:
+    inquiry: How many years after its first publication did a tenth anniversary edition
+      come out?
+  assert:
+  - type: icontains
+    value: '10'
+- vars:
+    inquiry: What is Ayn Rand's philosophy called?
+  assert:
+  - type: icontains
+    value: Objectivism
+- vars:
+    inquiry: What year was Alain Connes awarded his PhD?
+  assert:
+  - type: icontains
+    value: '1973'
+- vars:
+    inquiry: In which city did Alain Connes obtain his PhD?
+  assert:
+  - type: icontains
+    value: Paris, France
+- vars:
+    inquiry: When was Allan Dwan born?
+  assert:
+  - type: icontains
+    value: April 3, 1885
+- vars:
+    inquiry: In what year did Allan Dwan pass away?
+  assert:
+  - type: icontains
+    value: '1981'
+- vars:
+    inquiry: "What nationality was Both donatien Alphonse Fran\xE7ois and Mary Pickford\
+      \ in relation to the film industry's history?"
+  assert:
+  - type: icontains
+    value: Canadian-American
+- vars:
+    inquiry: How many motion pictures did Allan Dwan direct over his career spanning
+      almost 50 years?
+  assert:
+  - type: icontains
+    value: '125'
+- vars:
+    inquiry: What region did the Banu Hilal conquer following their invitation by
+      the Fatimids?
+  assert:
+  - type: icontains
+    value: Maghreb
+- vars:
+    inquiry: Which empire established a significant number of cities in Algeria during
+      Roman rule?
+  assert:
+  - type: icontains
+    value: Roman Empire
+- vars:
+    inquiry: In which year did Carthage fall to the Romans, leading to its annexation
+      by Rome?
+  assert:
+  - type: icontains
+    value: 146 BC
+- vars:
+    inquiry: What is the official language of Berber that refers to Algeria's indigenous
+      people?
+  assert:
+  - type: icontains
+    value: Tamazight
+- vars:
+    inquiry: Who defined 'anthropology' as 'the science of the nature of man'?
+  assert:
+  - type: icontains
+    value: Theodor Waitz
+- vars:
+    inquiry: What field did Franz Boas contribute to that emphasized cultural relativism
+      and holism in social relations studies?
+  assert:
+  - type: icontains
+    value: Social Anthropology/Cultural Anthropology
+- vars:
+    inquiry: What method is considered foundational in social and cultural anthropology
+      for understanding a culture from an emic perspective?
+  assert:
+  - type: icontains
+    value: Participant observation
+- vars:
+    inquiry: Which disciplines contributed to the development of cognitive science,
+      global studies, and various ethnic studies through their focus on cross-cultural
+      comparisons?
+  assert:
+  - type: icontains
+    value: Anthropology
+- vars:
+    inquiry: Who conducted early experiments on gypsum as a fertilizer in the 18th
+      century?
+  assert:
+  - type: icontains
+    value: Johann Friedrich Mayer
+- vars:
+    inquiry: "'The Smith\u2013Hughes Act of 1917' shifted focus in U.S. education,\
+      \ what field did this act originally support?"
+  assert:
+  - type: icontains
+    value: Agricultural Education
+- vars:
+    inquiry: What element did ancient Greeks associate with all things in the universe?
+  assert:
+  - type: icontains
+    value: Four elements
+- vars:
+    inquiry: Which Persian scholar visited Gujarat, influencing Islamic alchemy's
+      development?
+  assert:
+  - type: icontains
+    value: "Ab\u016B Rayh\u0101n B\u012Br\u016Bn\u012B"
+- vars:
+    inquiry: In which year was the International Workingmen's Association founded,
+      related to socialist movements including those with anarchistic views?
+  assert:
+  - type: icontains
+    value: '1864'
+- vars:
+    inquiry: "Which philosopher disapproved of political structures without a governing\
+      \ body or authority as pertaining to 'anarchy' \u2013 Thomas Hobbes or John\
+      \ Locke?"
+  assert:
+  - type: icontains
+    value: Thomas Hobbes
+- vars:
+    inquiry: What organization developed ASCII?
+  assert:
+  - type: icontains
+    value: American Standards Association
+- vars:
+    inquiry: In what year was the first edition of the ASCII standard published?
+  assert:
+  - type: icontains
+    value: '1963'
+- vars:
+    inquiry: In which U.S. state is the capital city named Austin located?
+  assert:
+  - type: icontains
+    value: Texas
+- vars:
+    inquiry: '''Austin'' in Canada refers to several municipalities; name one of them.'
+  assert:
+  - type: icontains
+    value: Austin, Manitoba
+- vars:
+    inquiry: '''Augustine of Hippo'' is associated with a religious order; which adjective
+      describes this order?'
+  assert:
+  - type: icontains
+    value: Augustinian
+- vars:
+    inquiry: '''The Backyardigans'' features a kangaroo character named Austin; what
+      type of toy is this related to?'
+  assert:
+  - type: icontains
+    value: Beanie Baby
+- vars:
+    inquiry: Who created the first feature-length silhouette animation?
+  assert:
+  - type: icontains
+    value: Lotte Reiniger
+- vars:
+    inquiry: '''Die Abenteuer des Prinzen Achmed'' released in what year by Lotte
+      Reiniger?'
+  assert:
+  - type: icontains
+    value: '1926'
+- vars:
+    inquiry: What was the first American animated series to air on prime time television?
+  assert:
+  - type: icontains
+    value: The Flintstones
+- vars:
+    inquiry: '''Scooby-Doo'' is an example of a successful animation TV series that
+      started in which year?'
+  assert:
+  - type: icontains
+    value: '1969'
+- vars:
+    inquiry: What is Apollo's primary function as a healer in classical literature?
+  assert:
+  - type: icontains
+    value: Healing
+- vars:
+    inquiry: Which epithet of Apollo refers to his role in protecting against evil?
+  assert:
+  - type: icontains
+    value: apotropaios
+- vars:
+    inquiry: What was the nickname given to Andre Agassi by sports media and fans?
+  assert:
+  - type: icontains
+    value: The Punisher
+- vars:
+    inquiry: "For which event was Andr\xE9 Agassi awarded the ATP Most Improved Player\
+      \ of the Year for the second time?"
+  assert:
+  - type: icontains
+    value: '1998'
+- vars:
+    inquiry: "Who reconstructed Proto-Mon\u2013Khmer in Harry L. Shorto's Mon\u2013\
+      Khmer Comparative Dictionary?"
+  assert:
+  - type: icontains
+    value: Harry L. Shorto
+- vars:
+    inquiry: Which of the following Austroasiatic languages are national or recognized
+      indigenous languages in Myanmar and Thailand, respectively?
+  assert:
+  - type: icontains
+    value: Mon; Wa
+- vars:
+    inquiry: What region primarily speaks the Berber languages?
+  assert:
+  - type: icontains
+    value: North Africa
+- vars:
+    inquiry: What is the primary language of Egyptian branch speakers today?
+  assert:
+  - type: icontains
+    value: Coptic (liturgical)
+- vars:
+    inquiry: What is the official language of Andorra?
+  assert:
+  - type: icontains
+    value: Catalan
+- vars:
+    inquiry: Which mountain range does Andorra lie within on the Iberian Peninsula?
+  assert:
+  - type: icontains
+    value: Pyrenees
+- vars:
+    inquiry: When was Napoleon I reestablished as a Co-Prince of Andorra after initially
+      removing its medieval title?
+  assert:
+  - type: icontains
+    value: '1809'
+- vars:
+    inquiry: What is another term for 'arithmetic average'?
+  assert:
+  - type: icontains
+    value: mean
+- vars:
+    inquiry: In statistics, what does the symbol (bar) above a variable typically
+      represent?
+  assert:
+  - type: icontains
+    value: Arithmetic Mean
+- vars:
+    inquiry: Which measure is considered the 'best single predictor' due to having
+      the lowest root mean squared error?
+  assert:
+  - type: icontains
+    value: Sample Mean
+- vars:
+    inquiry: What year did the American Football Conference adopt its current logo?
+  assert:
+  - type: icontains
+    value: '2010'
+- vars:
+    inquiry: How many times has the New England Patriots qualified for the Super Bowl
+      from the AFC since its inception, including intraconference games starting Tom
+      Brady as quarterback?
+  assert:
+  - type: icontains
+    value: '10'
+- vars:
+    inquiry: What is the total number of playoff appearances by teams other than Detroit
+      Lions and Minnesota Vikings between 1995-2022 from the AFC in Super Bowls, according
+      to Ben Roethlisberger's starting quarterbacks?
+  assert:
+  - type: icontains
+    value: '8'
+- vars:
+    inquiry: What year did the American Football Conference adopt its current logo?
+  assert:
+  - type: icontains
+    value: '2010'
+- vars:
+    inquiry: How many times has the New England Patriots qualified for the Super Bowl
+      from the AFC since its inception, including intraconference games starting Tom
+      Brady as quarterback?
+  assert:
+  - type: icontains
+    value: '10'
+- vars:
+    inquiry: What is the total number of playoff appearances by teams other than Detroit
+      Lions and Minnesota Vikings between 1995-2022 from the AFC in Super Bowls, according
+      to Ben Roethlisberger's starting quarterbacks?
+  assert:
+  - type: icontains
+    value: '8'
+- vars:
+    inquiry: What is Lissamphibia traditionally divided into?
+  assert:
+  - type: icontains
+    value: Three orders
+- vars:
+    inquiry: What are the three living orders of modern amphibians according to batrachology?
+  assert:
+  - type: icontains
+    value: Anura, Urodela, Gymnophiona
+- vars:
+    inquiry: What year did Alaska become an organized territory?
+  assert:
+  - type: icontains
+    value: '1912'
+- vars:
+    inquiry: When is the United States Mint celebrating Statehood Day for Alaska each
+      year?
+  assert:
+  - type: icontains
+    value: March 30
+- vars:
+    inquiry: '''Good Friday earthquake'' in what year caused significant damage and
+      fatalities in Alaska, particularly Anchorage?'
+  assert:
+  - type: icontains
+    value: '1964'
+- vars:
+    inquiry: When were wild grains first collected for consumption?
+  assert:
+  - type: icontains
+    value: 105,000 years ago
+- vars:
+    inquiry: '''Animal-drawn plough'' appeared in pictographs by which century BC
+      in Indus Valley civilization?'
+  assert:
+  - type: icontains
+    value: 2,500 BC
+- vars:
+    inquiry: "Which crop was independently domesticated on both the Pearl River and\
+      \ Eurasia around 8,200\u201313,500 years ago according to molecular clock estimates?"
+  assert:
+  - type: icontains
+    value: Rice
+- vars:
+    inquiry: What agricultural practice involves moving herds of livestock in search
+      for pasture?
+  assert:
+  - type: icontains
+    value: Nomadic Pastoralism
+- vars:
+    inquiry: Which type of farming is practiced mainly with the goal to satisfy only
+      local family or community needs?
+  assert:
+  - type: icontains
+    value: Subsistence Farming
+- vars:
+    inquiry: Which university did Aldous Leonard Huxley graduate from with a BA degree
+      in English literature?
+  assert:
+  - type: icontains
+    value: Oxford
+- vars:
+    inquiry: Who did Aldous Huxley introduce to Vedanta philosophy?
+  assert:
+  - type: icontains
+    value: Christopher Isherwood
+- vars:
+    inquiry: What profession provided a substantial income for Aldous Huxley in the
+      United States during his life?
+  assert:
+  - type: icontains
+    value: Screenwriter
+- vars:
+    inquiry: Where is Ada Foah located?
+  assert:
+  - type: icontains
+    value: Ghana
+- vars:
+    inquiry: What ISO code represents Dangme language spoken in Ghana?
+  assert:
+  - type: icontains
+    value: ada
+- vars:
+    inquiry: Which airline is based in Tirana, Albania and named after a place called
+      'Ada'?
+  assert:
+  - type: icontains
+    value: Ada Air
+- vars:
+    inquiry: In which state of the USA can you find Ada County?
+  assert:
+  - type: icontains
+    value: Idaho
+- vars:
+    inquiry: What is the former name of Abrdn?
+  assert:
+  - type: icontains
+    value: Standard Life Aberdeen
+- vars:
+    inquiry: In which Scottish city is Robert Gordon University located?
+  assert:
+  - type: icontains
+    value: Aberdeen
+- vars:
+    inquiry: What professional football team from Aberdeen plays women's matches?
+  assert:
+  - type: icontains
+    value: Aberdeen L.F.C.
+- vars:
+    inquiry: What is algal turf composed of?
+  assert:
+  - type: icontains
+    value: Diatoms, cyanobacteria, chlorophytes
+- vars:
+    inquiry: Which phycobiont species are most commonly associated with lichen fungi?
+  assert:
+  - type: icontains
+    value: Green algae
+- vars:
+    inquiry: In which phyla can parasitic associations between certain species of
+      green algae be found with lichens or other organisms?
+  assert:
+  - type: icontains
+    value: Charophyta and Rhodophyta
+- vars:
+    inquiry: How many sigma bonds do each carbon atom in an alkane form with hydrogen
+      or other carbons?
+  assert:
+  - type: icontains
+    value: '4'
+- vars:
+    inquiry: By what rule are cycloalkanes referred to, despite being technically
+      distinct from alkanes?
+  assert:
+  - type: icontains
+    value: cyclic alkanes
+- vars:
+    inquiry: What document represents an initial pleading by a defendant in common
+      law?
+  assert:
+  - type: icontains
+    value: Answer
+- vars:
+    inquiry: What historical collection of legal opinions became authoritative over
+      time in Roman law?
+  assert:
+  - type: icontains
+    value: Responsa Prudentium
+- vars:
+    inquiry: '''Changing the topic'' during debates is often seen as failing to do
+      what with an original question?'
+  assert:
+  - type: icontains
+    value: Answer a question
+- vars:
+    inquiry: What is the highest court in New York State called, despite being an
+      intermediate appellate court?
+  assert:
+  - type: icontains
+    value: Court of Appeals
+- vars:
+    inquiry: In New York state law, what is the maximum delay allowed for video arraignment
+      without it being considered unnecessary?
+  assert:
+  - type: icontains
+    value: 24 hours
+- vars:
+    inquiry: Who composed the music for 'America the Beautiful'?
+  assert:
+  - type: icontains
+    value: Samuel A. Ward
+- vars:
+    inquiry: What year did Bates write her poem 'America the Beautiful' inspired by
+      Colorado Springs?
+  assert:
+  - type: icontains
+    value: '1893'
+- vars:
+    inquiry: Which band uses purple as one of its team colors inspired by 'America
+      the Beautiful'
+  assert:
+  - type: icontains
+    value: Colorado Rockies
+- vars:
+    inquiry: In what year was the International Workingmen's Association established?
+  assert:
+  - type: icontains
+    value: '1864'
+- vars:
+    inquiry: What type of technology assists individuals with mobility challenges
+      by providing support for limb movement and reducing back stress during lifting
+      tasks?
+  assert:
+  - type: icontains
+    value: Powered exoskeleton

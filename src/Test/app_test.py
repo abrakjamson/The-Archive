@@ -1,27 +1,28 @@
-with open("logfile.log", "a") as log_file: log_file.write("running app_test.py\n")
-print("running app_test.py")
+""" 
+Copyright Abram Jackson 2024
+All rights reserved
+"""
 
 import sys
 import os
 from typing import Dict, Any
 import logging
+import json
 
+# TODO finish sorting out paths
 if 'PROJECT_ROOT' not in os.environ:
     os.environ['PROJECT_ROOT'] = 'C:/Users/abram/Documents/The-Archive'
-
 # Promptfoo will call this file as a script, so we need to add the source into sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-with open("logfile.log", "a") as log_file: log_file.write("importing language model\n")
-from src.The_Archive.language_model import Language_Model
-with open("logfile.log", "a") as log_file: log_file.write("importing prompt templates\n")
-from src.The_Archive.prompt_templates import Prompt_Templates
 
-import json
+from src.The_Archive.language_model import Language_Model
+from src.The_Archive.prompt_templates import Prompt_Templates
 
 
 def call_api(prompt, options: Dict[str, any], context):
     """
     Tests The Archive's reasoning loop without application surroundings.
+    Exptected to be run by Promptfoo.
     A prompt to test is required.
     Available options are 'prompt type' and 'model'
 
@@ -29,6 +30,7 @@ def call_api(prompt, options: Dict[str, any], context):
     - 'model' is a Huggingface model path
     """
 
+    # TODO Explore using scenarios or different provider functions instead of this method
     prompt_type = options.get('prompt type', None)
     model = options.get('model', None)
     if model is not None:
@@ -45,7 +47,7 @@ def call_api(prompt, options: Dict[str, any], context):
         archive.answer_prompt = prompt
 
     # The user's actual question is in the configuration
-    inquiry = context['vars'].get('inquiry', "report a missing inquiry")
+    inquiry = context['vars'].get('inquiry', "No user question found.")
     output = archive.process_query(inquiry)
 
     result = {
@@ -55,7 +57,7 @@ def call_api(prompt, options: Dict[str, any], context):
     return result
 
 if __name__ == "__main__":
-    # null test of just functionality
+    # test functionality with same prompt
     templates = Prompt_Templates()
     prompt_to_test = templates.search_prompt()
     model_name= r"C:\Users\abram\.cache\lm-studio\models\bartowski\Phi-3.5-mini-instruct-GGUF\Phi-3.5-mini-instruct-Q4_K_M.gguf"
